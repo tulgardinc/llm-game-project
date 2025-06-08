@@ -1,0 +1,17 @@
+[
+  {
+    "name": "getCharacter",
+    "description": "Gets details about a character",
+    "function": "getCharacter",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "charName": {
+          "type": "string",
+          "description": "The name of the character you are querying"
+        }
+      },
+      "required": ["charName"]
+    }
+  }
+]
