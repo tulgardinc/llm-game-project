@@ -8,16 +8,7 @@ import { useEffect, useRef, useState } from "react";
 export default function Home() {
   const chatRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<Content[]>([
-    {
-      role: "user",
-      parts: [{ text: "wow!" }],
-    },
-    {
-      role: "model",
-      parts: [{ text: "kewl!" }],
-    },
-  ]);
+  const [chatHistory, setChatHistory] = useState<Content[]>([]);
 
   const handleMessageSubmit = async () => {
     const newMessage = {
@@ -29,18 +20,21 @@ export default function Home() {
 
     setChatHistory((h) => [...h, newMessage]);
 
-    console.log(chatHistory);
-
     const response = await fetch("api/gemini", {
       method: "POST",
       body: JSON.stringify({ contents: [...chatHistory, newMessage] }),
     });
     const { contents } = (await response.json()) as { contents: Content[] };
+    console.log([...chatHistory, ...contents]);
     setChatHistory((h) => [...h, ...contents]);
   };
 
   useEffect(() => {
-    chatRef.current!.lastElementChild!.scrollIntoView({ behavior: "smooth" });
+    const current = chatRef.current;
+    if (!current) return;
+    const child = current.lastElementChild;
+    if (!child) return;
+    child.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
   return (
@@ -51,6 +45,7 @@ export default function Home() {
             (m, i) =>
               m.parts &&
               m.parts.length > 0 &&
+              !m.parts.some((p) => p.functionCall) &&
               m.parts[0].text && (
                 <Card key={i}>
                   <CardHeader>

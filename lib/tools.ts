@@ -1,13 +1,32 @@
 import { FunctionDeclaration } from "@google/genai";
-import { readFile } from "fs/promises";
 
-import tools from "@/lib/tools.json";
-type MCPFunctionDecleration = (typeof tools)[0];
+import { prisma } from "./prisma";
+
+type MCPFunctionDecleration = {
+  name: string;
+  description: string;
+  function: string;
+  parameters?: {
+    type: string;
+    properties: {
+      [key: string]:
+        | {
+            type: string;
+            description: string;
+          }
+        | undefined;
+    };
+    required: string[];
+  };
+};
 
 export function mcpToGemini(
   functionDesc: MCPFunctionDecleration,
 ): FunctionDeclaration {
   const newDecl = { ...functionDesc };
+
+  if (!newDecl.parameters) return functionDesc as FunctionDeclaration;
+
   newDecl.parameters.type = newDecl.parameters.type.toUpperCase();
 
   const props = newDecl.parameters.properties;
@@ -24,27 +43,64 @@ export function mcpToGemini(
   return newDecl as FunctionDeclaration;
 }
 
+type ParamOf<F> = F extends (arg: infer P) => unknown ? P : never;
+type ReturnOf<F> = F extends (...args: readonly unknown[]) => infer R
+  ? R
+  : never;
+
 export function toolCaller<T extends ToolFunctionName>(
   functionName: T,
-  parameters: Record<string, unknown>,
+  parameters: ToolParameters<T>,
 ): ToolReturn<T> {
-  return toolFunctions[functionName](
-    parameters as ToolParameters<T>,
-  ) as ToolReturn<T>;
+  const fn = toolFunctions[functionName] as unknown as (
+    p: ToolParameters<T>,
+  ) => ToolReturn<T>;
+  return fn(parameters);
 }
 
 const toolFunctions = {
-  getCharacter: async (params: { charName: string }): Promise<string> => {
-    return readFile(`./data/${params.charName}.json`, "utf-8");
+  getAllCharacterNames: async () => {
+    const chars = await prisma.characters.findMany({
+      select: {
+        name: true,
+      },
+    });
+    return chars;
+  },
+  getCharacter: async (params: { charName: string }) => {
+    const char = await prisma.characters.findFirst({
+      select: {
+        name: true,
+        description: true,
+      },
+      where: {
+        name: {
+          equals: params.charName,
+        },
+      },
+    });
+    return char;
+  },
+  addCharacter: async (params: { name: string; description: string }) => {
+    await prisma.characters.create({
+      data: {
+        name: params.name,
+        description: params.description,
+      },
+    });
+    return {
+      name: params.name,
+      description: params.description,
+    };
   },
 };
 
 type ToolFunctionMap = typeof toolFunctions;
 export type ToolFunctionName = keyof ToolFunctionMap;
-export type ToolParameters<T extends ToolFunctionName> = Parameters<
+export type ToolParameters<T extends ToolFunctionName> = ParamOf<
   ToolFunctionMap[T]
->[0];
-type ToolReturn<T extends ToolFunctionName> = ReturnType<ToolFunctionMap[T]>;
+>;
+type ToolReturn<T extends ToolFunctionName> = ReturnOf<ToolFunctionMap[T]>;
 
 export function isToolName(name: string): name is ToolFunctionName {
   return name in toolFunctions;

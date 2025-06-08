@@ -5,6 +5,15 @@ import { isToolName, mcpToGemini, toolCaller } from "@/lib/tools";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+const SYSTEM_INSTRUCTION = `
+Your primary goal is to satisfy the user’s request by using your memory or invoking the appropriate function(s) in as few turns as possible.  
+- Only make function calls if the answer is not already in your context.
+- Always analyze the user’s input and decide if a function call is needed.  
+- After the function returns, immediately process its output and, if further function calls are necessary, again emit the next function call.  
+- Continue chaining back-to-back function calls across turns without any intervening assistant messages until the user’s request is fully satisfied.  
+- Once no further function calls are needed, provide the final response text to the user.  
+`;
+
 export async function POST(request: NextRequest) {
   const { contents: pastContents } = (await request.json()) as {
     contents: Content[];
@@ -13,10 +22,11 @@ export async function POST(request: NextRequest) {
   const geminiTools = tools.map((t) => mcpToGemini(t));
 
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-  const response = await ai.models.generateContent({
+  let response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
     contents: pastContents,
     config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       tools: [
         {
           functionDeclarations: geminiTools,
@@ -25,48 +35,50 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if (response.functionCalls && response.functionCalls.length > 0) {
-    const modelContent = response.candidates![0].content!;
-    const newContent = [...pastContents, modelContent];
+  const modelContent = response.candidates![0].content!;
+  const newContents = [modelContent];
+
+  while (response.functionCalls && response.functionCalls.length > 0) {
     const parts: Part[] = [];
 
-    for (let i = 0; i < response.functionCalls.length; i++) {
-      const functionCall = modelContent!.parts![i].functionCall!;
-      if (!isToolName(functionCall.name!)) return;
+    for (const fc of response.functionCalls) {
+      if (!isToolName(fc.name!)) return;
 
-      const functionResult = await toolCaller(
-        functionCall.name,
-        functionCall.args!,
-      );
+      console.log(fc.name);
+
+      const functionResult = await toolCaller(fc.name, fc.args!);
 
       parts.push({
         functionResponse: {
-          name: functionCall.name!,
+          name: fc.name!,
           response: { output: functionResult },
         },
       });
     }
 
-    newContent.push({
+    newContents.push({
       role: "user",
       parts,
     });
 
-    const finalResponse = await ai.models.generateContent({
+    response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
-      contents: newContent,
+      contents: [...pastContents, ...newContents],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        tools: [
+          {
+            functionDeclarations: geminiTools,
+          },
+        ],
+      },
     });
 
-    newContent.push({ role: "model", parts: [{ text: finalResponse.text }] });
-
-    return NextResponse.json({
-      contents: newContent.slice(
-        newContent.length - 1 - response.functionCalls.length,
-      ),
-    });
+    const modelContent = response.candidates![0].content!;
+    newContents.push(modelContent);
   }
 
   return NextResponse.json({
-    contents: [{ role: "model", parts: [{ text: response.text }] }],
+    contents: newContents,
   });
 }
