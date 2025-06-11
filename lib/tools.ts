@@ -93,6 +93,22 @@ const toolFunctions = {
       description: params.description,
     };
   },
+  setCharacterDescription: async (params: {
+    name: string;
+    description: string;
+  }) => {
+    await prisma.characters.updateMany({
+      where: {
+        name: params.name,
+      },
+      data: {
+        description: {
+          set: params.description,
+        },
+      },
+    });
+    return true;
+  },
 };
 
 type ToolFunctionMap = typeof toolFunctions;

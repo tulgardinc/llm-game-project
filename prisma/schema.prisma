@@ -16,5 +16,5 @@ datasource db {
 model characters {
     id           String @id @default(uuid()) @db.Uuid
     name         String
-    description  String
+    description  Json
 }

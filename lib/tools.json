@@ -1,19 +1,19 @@
 [
   {
     "name": "getAllCharacterNames",
-    "description": "Returns all known character names that are in the database.",
+    "description": "Retrieve a list of all character names currently stored in the database.",
     "function": "getAllCharacterNames"
   },
   {
     "name": "getCharacter",
-    "description": "Returns the details of a character from the database given their name.",
+    "description": "Fetch the full detail record for a single character by name.",
     "function": "getCharacter",
     "parameters": {
       "type": "object",
       "properties": {
         "charName": {
           "type": "string",
-          "description": "The name of the character you are querying"
+          "description": "The exact name of the character to look up."
         }
       },
       "required": ["charName"]
@@ -21,21 +21,40 @@
   },
   {
     "name": "addCharacter",
-    "description": "Adds a new character with a name and a description to the database, returns the added character if successfull.",
+    "description": "Create and store a new character entry with a name and brief description.",
     "function": "addCharacter",
     "parameters": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
-          "description": "Name of the character"
+          "description": "The name of the new character."
         },
         "description": {
           "type": "string",
-          "description": "Description of the character"
+          "description": "A short summary or overview of the character."
         }
       },
       "required": ["name", "description"]
+    }
+  },
+  {
+    "name": "setCharacterDescription",
+    "description": "Overwrite the structured description for an existing character with a new JSON object conforming to the character template. Returns wheather the call was successfull.",
+    "function": "setCharacterDescription",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the character that will have his description JSON modified."
+        },
+        "description": {
+          "type": "string",
+          "description": "The new description JSON. It should be specified in the following format:\n\n{\n  \"identity\": {\n    \"aliases\": [],\n    \"age\": null,\n    \"gender\": \"\",\n    \"species\": \"\",\n    \"occupation\": \"\",\n    \"affiliations\": []\n  },\n\n  \"physical_attributes\": {\n    \"height_cm\": null,\n    \"weight_kg\": null,\n    \"body_type\": \"\",\n    \"skin_tone\": \"\",\n    \"eye_color\": \"\",\n    \"hair_color\": \"\",\n    \"distinguishing_features\": [],\n    \"clothing_style\": \"\",\n    \"voice\": \"\"\n  },\n\n  \"character_profile\": {\n    \"personality_traits\": [],\n    \"motivations\": [],\n    \"fears\": [],\n    \"values\": [],\n    \"temperament\": \"\",\n    \"moral_alignment\": \"\",\n    \"empathy\": null,\n    \"intelligence\": null,\n    \"memory_model\": \"\",\n    \"speech_style\": \"\",\n    \"catchphrases\": [],\n    \"dialogue_samples\": [],\n    \"default_behaviors\": [],\n    \"conflict_style\": \"\",\n    \"decision_model\": \"\",\n    \"ethical_framework\": \"\"\n  }\n}"
+        }
+      },
+      "required": ["description"]
     }
   }
 ]
