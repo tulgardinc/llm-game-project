@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { trpcClient } from "@/lib/trpc";
 import { Content } from "@google/genai";
 import { useEffect, useRef, useState } from "react";
 
@@ -28,6 +29,12 @@ export default function Home() {
     console.log([...chatHistory, ...contents]);
     setChatHistory((h) => [...h, ...contents]);
   };
+
+  useEffect(() => {
+    trpcClient.hello.hello
+      .query({ name: "World!" })
+      .then((resp) => console.log(resp));
+  }, []);
 
   useEffect(() => {
     const current = chatRef.current;
