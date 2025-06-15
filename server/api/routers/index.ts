@@ -1,8 +1,8 @@
 import { router } from "../trpc";
-import { helloRouter } from "./hello";
+import { geminiRouter } from "./gemini";
 
 export const appRouter = router({
-  hello: helloRouter,
+  gemini: geminiRouter,
 });
 
 export type AppRouter = typeof appRouter;

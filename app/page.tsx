@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 export default function Home() {
   const chatRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
+  const [dialogueHistory, setDialogueHistory] = useState<Content[]>([]);
   const [chatHistory, setChatHistory] = useState<Content[]>([]);
 
   const handleMessageSubmit = async () => {
@@ -20,21 +21,29 @@ export default function Home() {
     setInput("");
 
     setChatHistory((h) => [...h, newMessage]);
+    setDialogueHistory((h) => [...h, newMessage]);
 
-    const response = await fetch("api/gemini", {
-      method: "POST",
-      body: JSON.stringify({ contents: [...chatHistory, newMessage] }),
+    const newContents = await trpcClient.gemini.makeCharacterRequest.mutate({
+      pastContents: [...dialogueHistory, newMessage],
     });
-    const { contents } = (await response.json()) as { contents: Content[] };
-    console.log([...chatHistory, ...contents]);
-    setChatHistory((h) => [...h, ...contents]);
+    const charResponse = newContents[newContents.length - 1];
+
+    const newStoryParagraph = await trpcClient.gemini.makeWriterRequest.mutate({
+      pastStory: chatHistory
+        .filter((m) => m.role == "model")
+        .map((m) => m?.parts?.[0].text)
+        .join(""),
+      userRequest: newMessage,
+      charResponse,
+    });
+
+    console.log([...dialogueHistory, ...newContents]);
+    console.log([...chatHistory, newStoryParagraph]);
+    setDialogueHistory((h) => [...h, ...newContents]);
+    setChatHistory((h) => [...h, newStoryParagraph]);
   };
 
-  useEffect(() => {
-    trpcClient.hello.hello
-      .query({ name: "World!" })
-      .then((resp) => console.log(resp));
-  }, []);
+  useEffect(() => {}, []);
 
   useEffect(() => {
     const current = chatRef.current;

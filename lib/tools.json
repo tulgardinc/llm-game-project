@@ -32,7 +32,7 @@
         },
         "description": {
           "type": "string",
-          "description": "A short summary or overview of the character."
+          "description": "The description JSON of the new character. It should be specified in the following format:\n\n{\n  \"identity\": {\n    \"aliases\": [],\n    \"age\": null,\n    \"gender\": \"\",\n    \"species\": \"\",\n    \"occupation\": \"\",\n    \"affiliations\": []\n  },\n\n  \"physical_attributes\": {\n    \"height_cm\": null,\n    \"weight_kg\": null,\n    \"body_type\": \"\",\n    \"skin_tone\": \"\",\n    \"eye_color\": \"\",\n    \"hair_color\": \"\",\n    \"distinguishing_features\": [],\n    \"clothing_style\": \"\",\n    \"voice\": \"\"\n  },\n\n  \"character_profile\": {\n    \"personality_traits\": [],\n    \"motivations\": [],\n    \"fears\": [],\n    \"values\": [],\n    \"temperament\": \"\",\n    \"moral_alignment\": \"\",\n    \"empathy\": null,\n    \"intelligence\": null,\n    \"memory_model\": \"\",\n    \"speech_style\": \"\",\n    \"catchphrases\": [],\n    \"dialogue_samples\": [],\n    \"default_behaviors\": [],\n    \"conflict_style\": \"\",\n    \"decision_model\": \"\",\n    \"ethical_framework\": \"\"\n  }\n}"
         }
       },
       "required": ["name", "description"]
