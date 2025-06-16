@@ -25,7 +25,7 @@ export const geminiRouter = router({
                 },
                 where: {
                   name: {
-                    equals: "Thelum Metalborn",
+                    equals: "Torvin Stonebeard",
                   },
                 },
               }))!.description,

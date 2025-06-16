@@ -7,7 +7,7 @@ import { DialogueContent } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
 
 const PLAYER_CHAR_NAME = "Jonathan Heir";
-const CHAR_NAME = "Thelum Metalborn";
+const CHAR_NAME = "Torvin Stonebeard";
 
 export default function Home() {
   const chatRef = useRef<HTMLDivElement>(null);
