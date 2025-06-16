@@ -8,35 +8,56 @@ Your primary goal is to satisfy the user’s request by using your memory or inv
 `;
 
 export const WRITER_SYSTEM_INSTRUCTION = `
-You will receive two blocks in the prompt:
+You will always receive **exactly two** labelled sections:
 
-1. **PREVIOUS STORY:** – the full prose written so far.  
-2. **NEW DIALOGUE:** – a short exchange between two or more characters.
+**PREVIOUS STORY:**  
+*The full prose written so far.*
 
-Exactly in the following format:
+**NEW DIALOGUE:**  
+*One-or-more lines that look like*  
+\`char1: …\`  
+\`char2: …\`
 
-"""
-PREVIOUS STORY:
-[Full story text from all prior assistant messages, combined and cleaned]
+---
 
-NEW DIALOGUE:  
-<char1>: …  
-<char2>: …  
-"""
+## Your single job  
+Convert every line in **NEW DIALOGUE** into narrative prose that can be appended to **PREVIOUS STORY**.
 
-**Your task**
+---
 
-Write the next passage of the story **only by transforming the lines in NEW DIALOGUE into narrative prose**.  
-Follow these rules:
+### Hard rules – no exceptions
 
-- **Retell, don’t invent.** Every sentence you output must reflect an action, expression, or spoken line that appears in NEW DIALOGUE. Add **no extra dialogue, actions, thoughts, or descriptions**.
-- **Keep order.** Present events in the same sequence as they appear in NEW DIALOGUE.
-- **Convert dialogue.** Turn each characters spoken line into quoted speech with proper attribution, e.g.  
-  \`<char1>: Hello there.\` → \`"Hello there," <char1> said.\`  
-  Preserve exact wording and punctuation.
-- **Handle stage directions.** If a line contains bracketed/asterisked actions (e.g. *smiles*), narrate them succinctly in third-person prose.
-- **Match style.** Use the same tense, point-of-view, and tone as the Previous Story.
-- **Seamless append.** Output **only** the new prose—no titles, labels, or blank lines before/after—so it can be concatenated directly to the Previous Story.
+1. **No invention.**  
+   - If it is not present in **NEW DIALOGUE**, you must not add it.  
+   - Do **not** insert new thoughts, descriptions, backstory, or dialogue.
+
+2. **Preserve dialogue *verbatim*.**  
+   - A spoken line must appear *exactly* as in the prompt—same words, order, capitalisation, punctuation.  
+   - Place the line inside quotation marks and attribute it, e.g.  
+     \`char1: Hello there.\` → \`"Hello there," char 1 said.\`  
+   - *Never* paraphrase or summarise quoted speech.
+
+3. **Surround with prose.**  
+   - Briefly narrate actions, emotions, or stage directions **already implied** in the line (e.g. asterisks, brackets).  
+   - Wording of actions may vary, but the intention must remain.
+
+4. **Keep sequence.**  
+   - Render events in the exact order they appear under **NEW DIALOGUE**.
+
+5. **Match style.**  
+   - Use the same tense, point-of-view, and tone found in **PREVIOUS STORY**.
+
+6. **Seamless output.**  
+   - Produce *only* the new passage—no headings, labels, or blank lines before/after—so it can be directly concatenated to the existing text.
+
+---
+
+### Quick examples
+
+| NEW DIALOGUE | Correct | Incorrect |
+|--------------|-----------|-------------|
+| char1: Hello there. | "Hello there," char 1 said. | *Char 1 greeted Char 2.* |
+| char2: *smiles* Hi. | Char 2 smiled. "Hi." | Char 2 smiled and greeted him warmly. |
 `;
 
 export function createCharacterSystemInstruction(charDescriptionJSON: string) {

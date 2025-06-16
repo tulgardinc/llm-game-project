@@ -7,7 +7,7 @@ import { DialogueContent } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
 
 const PLAYER_CHAR_NAME = "Jonathan Heir";
-const CHAR_NAME = "name";
+const CHAR_NAME = "Thelum Metalborn";
 
 export default function Home() {
   const chatRef = useRef<HTMLDivElement>(null);
@@ -52,8 +52,6 @@ export default function Home() {
     setDialogueHistory((h) => [...h, charDialogueResponse]);
     setChatHistory((h) => [...h, newStoryParagraph]);
   };
-
-  useEffect(() => {}, []);
 
   useEffect(() => {
     const current = chatRef.current;
