@@ -3,43 +3,53 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { trpcClient } from "@/lib/trpc";
-import { Content } from "@google/genai";
+import { DialogueContent } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
+
+const PLAYER_CHAR_NAME = "Jonathan Heir";
+const CHAR_NAME = "name";
 
 export default function Home() {
   const chatRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
-  const [dialogueHistory, setDialogueHistory] = useState<Content[]>([]);
-  const [chatHistory, setChatHistory] = useState<Content[]>([]);
+  const [dialogueHistory, setDialogueHistory] = useState<DialogueContent[]>([]);
+  const [chatHistory, setChatHistory] = useState<DialogueContent[]>([]);
 
   const handleMessageSubmit = async () => {
-    const newMessage = {
-      role: "user",
-      parts: [{ text: input }],
-    } as Content;
+    const newMessage: DialogueContent = {
+      content: {
+        role: "user",
+        parts: [{ text: input }],
+      },
+      characterName: PLAYER_CHAR_NAME,
+    };
 
     setInput("");
 
     setChatHistory((h) => [...h, newMessage]);
     setDialogueHistory((h) => [...h, newMessage]);
 
-    const newContents = await trpcClient.gemini.makeCharacterRequest.mutate({
-      pastContents: [...dialogueHistory, newMessage],
+    const newCharContent = await trpcClient.gemini.makeCharacterRequest.mutate({
+      pastContents: [
+        ...dialogueHistory.map((h) => h.content),
+        newMessage.content,
+      ],
     });
-    const charResponse = newContents[newContents.length - 1];
+    const charDialogueResponse: DialogueContent = {
+      content: newCharContent,
+      characterName: CHAR_NAME,
+    };
 
     const newStoryParagraph = await trpcClient.gemini.makeWriterRequest.mutate({
       pastStory: chatHistory
-        .filter((m) => m.role == "model")
-        .map((m) => m?.parts?.[0].text)
+        .filter((m) => m.content.role == "model")
+        .map((m) => m.content.parts?.[0].text)
         .join(""),
       userRequest: newMessage,
-      charResponse,
+      charResponse: charDialogueResponse,
     });
 
-    console.log([...dialogueHistory, ...newContents]);
-    console.log([...chatHistory, newStoryParagraph]);
-    setDialogueHistory((h) => [...h, ...newContents]);
+    setDialogueHistory((h) => [...h, charDialogueResponse]);
     setChatHistory((h) => [...h, newStoryParagraph]);
   };
 
@@ -59,16 +69,18 @@ export default function Home() {
         <div ref={chatRef} className="grow flex flex-col gap-3 overflow-y-auto">
           {chatHistory.map(
             (m, i) =>
-              m.parts &&
-              m.parts.length > 0 &&
-              !m.parts.some((p) => p.functionCall) &&
-              m.parts[0].text && (
+              m.content.parts &&
+              m.content.parts.length > 0 &&
+              !m.content.parts.some((p) => p.functionCall) &&
+              m.content.parts[0].text && (
                 <Card key={i}>
                   <CardHeader>
-                    <CardTitle className="text-2xl">{m.role}</CardTitle>
+                    <CardTitle className="text-2xl">
+                      {m.characterName}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="text-2xl">
-                    {m.parts?.[0].text}
+                    {m.content.parts?.[0].text}
                   </CardContent>
                 </Card>
               ),

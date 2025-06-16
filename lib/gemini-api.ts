@@ -73,3 +73,19 @@ export async function makeGeminiRequestWithTools(
 
   return newContents;
 }
+
+export async function makeGeminiRequest(
+  pastContents: Content[],
+  systemInstruction: string,
+) {
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: pastContents,
+    config: {
+      systemInstruction: systemInstruction,
+    },
+  });
+
+  return response.candidates![0].content!;
+}

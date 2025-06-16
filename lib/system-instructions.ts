@@ -11,7 +11,7 @@ export const WRITER_SYSTEM_INSTRUCTION = `
 You will receive two blocks in the prompt:
 
 1. **PREVIOUS STORY:** – the full prose written so far.  
-2. **NEW DIALOGUE:** – a short exchange between \`user\` and \`character\`.
+2. **NEW DIALOGUE:** – a short exchange between two or more characters.
 
 Exactly in the following format:
 
@@ -20,8 +20,8 @@ PREVIOUS STORY:
 [Full story text from all prior assistant messages, combined and cleaned]
 
 NEW DIALOGUE:  
-user: …  
-character: …  
+<char1>: …  
+<char2>: …  
 """
 
 **Your task**
@@ -31,8 +31,8 @@ Follow these rules:
 
 - **Retell, don’t invent.** Every sentence you output must reflect an action, expression, or spoken line that appears in NEW DIALOGUE. Add **no extra dialogue, actions, thoughts, or descriptions**.
 - **Keep order.** Present events in the same sequence as they appear in NEW DIALOGUE.
-- **Convert dialogue.** Turn each “user:” or “character:” line into quoted speech with proper attribution, e.g.  
-  \`user: Hello there.\` → \`"Hello there," the user said.\`  
+- **Convert dialogue.** Turn each characters spoken line into quoted speech with proper attribution, e.g.  
+  \`<char1>: Hello there.\` → \`"Hello there," <char1> said.\`  
   Preserve exact wording and punctuation.
 - **Handle stage directions.** If a line contains bracketed/asterisked actions (e.g. *smiles*), narrate them succinctly in third-person prose.
 - **Match style.** Use the same tense, point-of-view, and tone as the Previous Story.

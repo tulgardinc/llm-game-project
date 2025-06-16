@@ -1,4 +1,4 @@
-import { makeGeminiRequestWithTools } from "@/lib/gemini-api";
+import { makeGeminiRequest } from "@/lib/gemini-api";
 import { publicProcedure, router } from "../trpc";
 import { z } from "zod";
 import { Content } from "@google/genai";
@@ -8,13 +8,14 @@ import {
   WRITER_SYSTEM_INSTRUCTION,
 } from "@/lib/system-instructions";
 import { prisma } from "@/lib/prisma";
+import { DialogueContent } from "@/lib/types";
 
 export const geminiRouter = router({
   makeCharacterRequest: publicProcedure
     .input(z.object({ pastContents: z.custom<Content[]>() }))
     .mutation(async ({ input }) => {
       try {
-        const newContents = await makeGeminiRequestWithTools(
+        const newContent = await makeGeminiRequest(
           input.pastContents,
           createCharacterSystemInstruction(
             JSON.stringify(
@@ -31,7 +32,7 @@ export const geminiRouter = router({
             ),
           ),
         );
-        return newContents;
+        return newContent;
       } catch (error) {
         throw new TRPCError({
           message: (error as Error).message,
@@ -43,8 +44,8 @@ export const geminiRouter = router({
     .input(
       z.object({
         pastStory: z.string(),
-        userRequest: z.custom<Content>(),
-        charResponse: z.custom<Content>(),
+        userRequest: z.custom<DialogueContent>(),
+        charResponse: z.custom<DialogueContent>(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -60,19 +61,19 @@ ${input.pastStory}
 
 NEW DIALOGUE:
 
-user:
-${input.userRequest?.parts?.[0].text}
+${input.userRequest.characterName}:
+${input.userRequest.content.parts?.[0].text}
 
-character:
-${input.charResponse?.parts?.[0].text}`,
+${input.charResponse.characterName}:
+${input.charResponse.content.parts?.[0].text}`,
             },
           ],
         };
-        const newContents = await makeGeminiRequestWithTools(
+        const newContent = await makeGeminiRequest(
           [formatedUserRequest],
           WRITER_SYSTEM_INSTRUCTION,
         );
-        return newContents[newContents.length - 1];
+        return { content: newContent, characterName: "Story" };
       } catch (error) {
         throw new TRPCError({
           message: (error as Error).message,
