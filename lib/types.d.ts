@@ -1,3 +1,3 @@
 import { Content } from "@google/genai";
 
-type DialogueContent = { content: Content; characterName: string };
+export type DialogueContent = { content: Content; characterName: string };

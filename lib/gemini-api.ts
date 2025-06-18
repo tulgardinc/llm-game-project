@@ -1,4 +1,4 @@
-import { Content, GoogleGenAI, Part } from "@google/genai";
+import { Content, GoogleGenAI, Part, Type, Schema } from "@google/genai";
 import tools from "@/lib/tools.json";
 import { isToolName, mcpToGemini, toolCaller } from "@/lib/tools";
 
@@ -77,6 +77,8 @@ export async function makeGeminiRequestWithTools(
 export async function makeGeminiRequest(
   pastContents: Content[],
   systemInstruction: string,
+  responseMimeType?: string,
+  responseSchema?: Schema,
 ) {
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   const response = await ai.models.generateContent({
@@ -84,6 +86,9 @@ export async function makeGeminiRequest(
     contents: pastContents,
     config: {
       systemInstruction: systemInstruction,
+      responseMimeType,
+      responseSchema,
+      maxOutputTokens: 500,
     },
   });
 
